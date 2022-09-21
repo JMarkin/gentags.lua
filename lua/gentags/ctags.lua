@@ -5,7 +5,6 @@ local current_running = nil
 local tag_added = false
 
 M.generate = function(cfg, file)
-  vim.notify("Generate ctags: " .. tostring(file), vim.log.levels.DEBUG)
   local args = vim.deepcopy(cfg.ctags.args)
 
   table.insert(args, "-f")
@@ -41,6 +40,8 @@ M.generate = function(cfg, file)
       current_running = nil
     end),
   })
+
+  vim.notify("generate ctags args: " .. vim.inspect(args), vim.log.levels.DEBUG)
   if current_running ~= nil then
     vim.notify("Kill previous generation: " .. current_running.pid, vim.log.levels.DEBUG)
     vim.loop.kill(current_running.pid, 3)
