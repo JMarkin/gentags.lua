@@ -62,7 +62,7 @@ end
 M.enable = function(language)
   vim.notify("Enable gentags", vim.log.levels.DEBUG)
   if language ~= nil then
-    table.insert(config.ctags.args, "--language=" .. language)
+    table.insert(config.ctags.args, "--languages=" .. language)
   end
   generate_all()
   autocmds()
