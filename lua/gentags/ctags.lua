@@ -41,9 +41,7 @@ M.generate = function(cfg, file)
     end),
   })
 
-  vim.notify("generate ctags args: " .. vim.inspect(args), vim.log.levels.DEBUG)
   if current_running ~= nil then
-    vim.notify("Kill previous generation: " .. current_running.pid, vim.log.levels.DEBUG)
     vim.loop.kill(current_running.pid, 3)
   end
   j:start()

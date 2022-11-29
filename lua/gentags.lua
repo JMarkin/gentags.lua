@@ -60,7 +60,6 @@ local generate_all = function()
 end
 
 M.enable = function(language)
-  vim.notify("Enable gentags", vim.log.levels.DEBUG)
   if language ~= nil then
     table.insert(config.ctags.args, "--languages=" .. language)
   end
@@ -70,7 +69,6 @@ end
 
 M.disable = function()
   if au_group ~= nil then
-    vim.notify("Disable gentags", vim.log.levels.DEBUG)
     vim.api.nvim_del_augroup_by_id(au_group)
     au_group = nil
   end
