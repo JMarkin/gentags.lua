@@ -1,6 +1,6 @@
 # Auto generate tag files by ctags
 
-This plugin autogenerate tags by filetype. Inspired by [jsfaint/gen_tags.vim](https://github.com/jsfaint/gen_tags.vim)
+This plugin autogenerates tags by filetype. Inspired by [jsfaint/gen_tags.vim](https://github.com/jsfaint/gen_tags.vim)
 
 
 ## Install
@@ -18,12 +18,12 @@ This plugin autogenerate tags by filetype. Inspired by [jsfaint/gen_tags.vim](ht
 }
 ```
 
-## Configurations
+## Configuration
 ```lua
 {
   root_dir = vim.g.gentags_root_dir or vim.loop.cwd(),
   cache = {
-    path = Path:new(vim.fn.stdpath("cache")):joinpath("tags"), -- path where store generated tags, currently required plenary Path object
+    path = Path:new(vim.fn.stdpath("cache")):joinpath("tags"), -- path where generated tags store, currently required plenary Path object
   },
   bin = "ctags",
   args = { -- extra args
