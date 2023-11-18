@@ -29,7 +29,11 @@ M.generate = function(cfg, lang, tag_file, filepath)
     end),
   })
 
-  j:start()
+  if cfg.async then
+    j:start()
+  else
+    j:sync()
+  end
 end
 
 return M

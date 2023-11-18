@@ -2,8 +2,8 @@
 
 This plugin autogenerates tags by filetype. Inspired by [jsfaint/gen_tags.vim](https://github.com/jsfaint/gen_tags.vim)
 
-
 ## Install
+
 ```lua
 {
     "JMarkin/gentags.lua",
@@ -19,12 +19,14 @@ This plugin autogenerates tags by filetype. Inspired by [jsfaint/gen_tags.vim](h
 ```
 
 ## Configuration
+
 ```lua
 {
   root_dir = vim.g.gentags_root_dir or vim.loop.cwd(),
   cache = {
     path = Path:new(vim.fn.stdpath("cache")):joinpath("tags"), -- path where generated tags store, currently required plenary Path object
   },
+  async = true, -- run ctags asynchronous
   bin = "ctags",
   args = { -- extra args
     "--extras=+r+q",
