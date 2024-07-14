@@ -3,6 +3,8 @@ local Path = require("plenary.path")
 
 local M = {}
 local config = {
+  autostart = true,
+  append_on_save = true,
   root_dir = vim.g.gentags_root_dir or vim.loop.cwd(),
   cache = {
     path = Path:new(vim.fn.stdpath("cache")):joinpath("tags"),
@@ -116,7 +118,9 @@ M.setup = function(args)
     config.lang_tag_map[lang_name] = config.cache.path:joinpath(tag_file)
   end
 
-  M.enable()
+  if config.autostart then
+    M.enable()
+  end
 end
 
 return M

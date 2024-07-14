@@ -24,7 +24,7 @@ M.generate = function(cfg, lang, tag_file, filepath)
     args = args,
     on_exit = vim.schedule_wrap(function(job, code)
       if code ~= 0 then
-        vim.notify(job._stderr_results, vim.log.levels.ERROR)
+        vim.print(job._stderr_results)
       end
     end),
   })

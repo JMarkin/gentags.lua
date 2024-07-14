@@ -11,10 +11,8 @@ This plugin autogenerates tags by filetype. Inspired by [jsfaint/gen_tags.vim](h
     dependencies = {
         "nvim-lua/plenary.nvim",
     },
-    config = function()
-        require("gentags").setup({})
-    end,
     event = "VeryLazy",
+    opts = {}
 }
 ```
 
@@ -22,6 +20,7 @@ This plugin autogenerates tags by filetype. Inspired by [jsfaint/gen_tags.vim](h
 
 ```lua
 {
+  autostart = true,
   root_dir = vim.g.gentags_root_dir or vim.loop.cwd(),
   cache = {
     path = Path:new(vim.fn.stdpath("cache")):joinpath("tags"), -- path where generated tags store, currently required plenary Path object
