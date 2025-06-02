@@ -1,11 +1,10 @@
-local Job = require("plenary.job")
 local M = {}
 
 M.generate = function(cfg, lang, tag_file, filepath)
   local args = {
     "--languages=" .. lang,
     "-f",
-    tag_file:expand(),
+    tag_file,
   }
   for _, v in ipairs(cfg.args) do
     table.insert(args, v)
@@ -16,23 +15,28 @@ M.generate = function(cfg, lang, tag_file, filepath)
     table.insert(args, filepath)
   else
     table.insert(args, "-R")
-    table.insert(args, cfg.root_dir:expand())
+    table.insert(args, cfg.root_dir)
   end
 
-  local j = Job:new({
-    command = cfg.bin,
-    args = args,
-    on_exit = vim.schedule_wrap(function(job, code)
-      if code ~= 0 then
-        vim.print(job._stderr_results)
-      end
-    end),
-  })
+  -- vim.print(cfg.bin)
 
-  if cfg.async then
-    j:start()
-  else
-    j:sync()
+  local j = vim.system(
+    { cfg.bin, table.unpack(args) },
+    {
+      text = true,
+    },
+    vim.schedule_wrap(function(obj)
+      local code = obj.code
+      if code ~= 0 then
+        vim.notify(obj.stderr, vim.log.levels.ERROR)
+      end
+    end)
+  )
+
+  -- vim.print(j.pid)
+
+  if not cfg.async then
+    j:wait()
   end
 end
 
