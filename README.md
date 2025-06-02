@@ -8,22 +8,23 @@ This plugin autogenerates tags by filetype. Inspired by [jsfaint/gen_tags.vim](h
 {
     "JMarkin/gentags.lua",
     cond = vim.fn.executable("ctags") == 1,
-    dependencies = {
-        "nvim-lua/plenary.nvim",
-    },
     event = "VeryLazy",
     opts = {}
 }
 ```
 
+Ctags -- [universal-ctags](https://github.com/universal-ctags/ctags) 
+
 ## Configuration
+
+default config: 
 
 ```lua
 {
   autostart = true,
-  root_dir = vim.g.gentags_root_dir or vim.loop.cwd(),
+  root_dir = vim.g.gentags_root_dir or vim.uv.cwd(),
   cache = {
-    path = Path:new(vim.fn.stdpath("cache")):joinpath("tags"), -- path where generated tags store, currently required plenary Path object
+    path = vim.fs.joinpath(vim.fn.stdpath("cache"), "tags"), -- path where generated tags store
   },
   async = true, -- run ctags asynchronous
   bin = "ctags",
@@ -46,6 +47,7 @@ This plugin autogenerates tags by filetype. Inspired by [jsfaint/gen_tags.vim](h
     ["C,C++,CUDA"] = { "c", "cpp", "h", "cuda" },
     ["JavaScript"] = { "javascript" },
     ["Go"] = { "go" },
+    ["Rust"] = { "rust" },
   }
 }
 ```
