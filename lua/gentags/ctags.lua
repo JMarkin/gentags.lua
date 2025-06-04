@@ -1,3 +1,5 @@
+local lock = require("gentags.lockfile")
+
 local M = {}
 
 M.generate = function(cfg, lang, tag_file, filepath)
@@ -6,38 +8,44 @@ M.generate = function(cfg, lang, tag_file, filepath)
     "-f",
     tag_file,
   }
+
   for _, v in ipairs(cfg.args) do
     table.insert(args, v)
   end
 
-  if filepath then
-    table.insert(args, "-a")
-    table.insert(args, filepath)
-  else
-    table.insert(args, "-R")
-    table.insert(args, cfg.root_dir)
-  end
+  -- if filepath then
+  --   table.insert(args, "-a")
+  --   table.insert(args, filepath)
+  -- else
+  table.insert(args, "-R")
+  table.insert(args, cfg.root_dir)
+  -- end
 
-  -- vim.print(cfg.bin)
+  local lockname = vim.base64.encode(tag_file)
 
-  local j = vim.system(
-    { cfg.bin, table.unpack(args) },
-    {
-      text = true,
-    },
-    vim.schedule_wrap(function(obj)
-      local code = obj.code
-      if code ~= 0 then
-        vim.notify(obj.stderr, vim.log.levels.ERROR)
-      end
-    end)
-  )
+  lock.try_lock(lockname, function()
+    local j = vim.system(
+      { cfg.bin, table.unpack(args) },
+      {
+        text = true,
+      },
+      vim.schedule_wrap(function(obj)
+        local code = obj.code
+        if code ~= 0 then
+          vim.notify(obj.stderr, vim.log.levels.ERROR)
+        end
 
-  -- vim.print(j.pid)
+        lock.remove_lock(lockname)
+      end)
+    )
 
-  if not cfg.async then
-    j:wait()
-  end
+    -- vim.print(j.pid)
+
+    if not cfg.async then
+      j:wait()
+    end
+    -- vim.print(cfg.bin)
+  end)
 end
 
 return M
