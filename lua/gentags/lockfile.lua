@@ -14,9 +14,8 @@ M.get_lock_file = function(name)
   M.locks[name] = lockfile
 
   local opts = {
-    swapfile = false,
     buflisted = false,
-    readonly = true,
+    buftype = "nofile",
   }
   for key, value in pairs(opts) do
     vim.api.nvim_set_option_value(key, value, {
@@ -50,6 +49,9 @@ local function setTimeout(timeout, callback)
 end
 
 M.try_lock = function(name, func)
+  if vim.fn.win_gettype() == "command" then
+    return
+  end
   local lockfile = M.get_lock_file(name)
 
   if lockfile == nil then
