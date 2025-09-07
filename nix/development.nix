@@ -16,13 +16,14 @@ in
       };
 
       devShells.default = pkgs-dev.mkShell {
-        packages = [
-          pkgs-dev.nil
+        packages = with pkgs-dev; [
+          nixd
 
-          pkgs-dev.stylua
-          pkgs-dev.lua-language-server
+          stylua
+          lua-language-server
 
-          pkgs-dev.lua
+          lua
+          universal-ctags
         ];
       };
     };
