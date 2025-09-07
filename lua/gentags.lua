@@ -29,7 +29,6 @@ local config = {
     ["C,C++,CUDA"] = { "c", "cpp", "h", "cuda" },
     ["JavaScript"] = { "javascript" },
     ["Go"] = { "go" },
-    ["Rust"] = { "rust" },
   },
 }
 
