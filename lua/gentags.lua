@@ -37,9 +37,12 @@ local LANG_TAG_MAP = {}
 local au_group = vim.api.nvim_create_augroup("GenTags", { clear = true })
 
 local setup_langmap = function()
+  vim.fn.mkdir(vim.fs.dirname(config.cache.path), "p")
+
   if #LANG_TAG_MAP ~= 0 then
     return
   end
+
   local root_path = config.root_dir
 
   local cwd_b64 = vim.base64.encode(root_path)
@@ -125,8 +128,6 @@ M.setup = function(args)
     args = {}
   end
   config = vim.tbl_deep_extend("keep", args, config)
-
-  vim.fn.mkdir(vim.fs.dirname(config.cache.path), "p")
 
   if config.autostart then
     M.enable()
