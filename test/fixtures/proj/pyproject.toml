@@ -1,0 +1,5 @@
+[project]
+name = "gentags-fixture"
+
+# Root marker for the tests: vim.fs.root() must stop here, not at the .git of the
+# repository that contains this fixture.

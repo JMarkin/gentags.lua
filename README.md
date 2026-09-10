@@ -13,7 +13,11 @@ This plugin autogenerates tags by filetype. Inspired by [jsfaint/gen_tags.vim](h
 }
 ```
 
-Ctags -- [universal-ctags](https://github.com/universal-ctags/ctags) 
+Ctags -- [universal-ctags](https://github.com/universal-ctags/ctags)
+
+Requires Neovim 0.12+.
+
+Docs: `:help gentags` (run `:helptags doc` after install if your plugin manager does not).
 
 ## Configuration
 
@@ -21,8 +25,13 @@ default config:
 
 ```lua
 {
-  autostart = true,
-  root_dir = vim.g.gentags_root_dir or vim.uv.cwd(),
+  autostart = true, -- register autocmds on setup
+  -- nil: auto detect per buffer, "path": fixed root, false: cwd, function(bufnr): custom root
+  root_dir = nil,
+  generate = {
+    on_open = true, -- generate on FileType when the tag file is missing
+    on_write = true, -- regenerate on BufWritePost, debounced by 300ms
+  },
   cache = {
     path = vim.fs.joinpath(vim.fn.stdpath("cache"), "tags"), -- path where generated tags store
   },
@@ -50,4 +59,20 @@ default config:
     ["Rust"] = { "rust" },
   }
 }
+```
+
+Notes:
+
+- Root resolution order: `vim.g.gentags_root_dir` -> `root_dir` -> auto detect (`.git`, `pyproject.toml`,
+  `package.json`, `go.mod`, `Cargo.toml`) -> `vim.uv.cwd()`.
+- Generation is always a full `ctags -R <root>` run. Runs are serialized per tag file: rapid saves collapse
+  into one follow-up run. `append_on_save` from older versions did nothing and has been removed.
+- `:GenTagsDisable` removes the autocmds and drops queued runs. Tag files already added to the `'tags'`
+  of an open buffer stay there.
+
+## Development
+
+```sh
+nvim --clean --headless -l test/gentags_spec.lua   # spec, non-zero exit on failure
+stylua --check lua/ test/
 ```

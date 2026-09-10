@@ -1,0 +1,199 @@
+*gentags.txt*    Auto generate tag files by ctags                 *gentags*
+
+==============================================================================
+CONTENTS                                                 *gentags-contents*
+
+1. Introduction ..................................... |gentags-intro|
+2. Requirements ..................................... |gentags-requirements|
+3. Commands ......................................... |gentags-commands|
+4. Setup ............................................ |gentags-setup|
+5. Options .......................................... |gentags-options|
+6. Root detection ................................... |gentags-root|
+7. Generation model ................................. |gentags-generation|
+8. Health ........................................... |gentags-health|
+9. Limitations ...................................... |gentags-limitations|
+
+==============================================================================
+1. INTRODUCTION                                              *gentags-intro*
+
+gentags generates a ctags file per ctags language and project root, and adds
+it to the 'tags' option of every buffer of that language. Tags are stored
+outside the project, under |stdpath()|/cache, so nothing is written into your
+working tree.
+
+Inspired by jsfaint/gen_tags.vim.
+
+==============================================================================
+2. REQUIREMENTS                                        *gentags-requirements*
+
+- Neovim 0.12 or newer.                                         *gentags-nvim*
+- universal-ctags: https://github.com/universal-ctags/ctags      *gentags-ctags*
+
+Set up a git repo: >
+    git clone https://github.com/universal-ctags/ctags.git
+<
+
+Install with any plugin manager: >
+    {
+      "JMarkin/gentags.lua",
+      event = "VeryLazy",
+      opts = {}
+    }
+<
+Then run |:helptags| on the plugin directory if your manager does not do it
+for you (lazy.nvim does, `:packadd` does not).
+
+==============================================================================
+3. COMMANDS                                            *gentags-commands*
+
+                                                                *:GenCTags*
+:GenCTags               Generate the tag file for the current buffer's
+                        language and root, and add it to the buffer's 'tags'.
+                        Always runs, ignoring |gentags-options|.
+
+                                                            *:GenTagsEnable*
+:GenTagsEnable          Register the autocommands that generate tags on
+                        |FileType| and |BufWritePost|. Called by
+                        |gentags.setup()| unless `autostart` is false.
+
+                                                           *:GenTagsDisable*
+:GenTagsDisable         Remove the autocommands and drop queued runs. Tag
+                        files already added to the 'tags' option of an open
+                        buffer stay there.
+
+==============================================================================
+4. SETUP                                                  *gentags-setup*
+
+                                                        *gentags.setup()*
+setup({opts})
+                Merges `opts` over the defaults and registers the
+                autocommands when `autostart` is true. Safe to call more than
+                once: the previous configuration is disabled first.
+
+Examples: >
+    require("gentags").setup()
+<
+    -- one tag file for the whole monorepo
+    require("gentags").setup({ root_dir = vim.fn.expand("~/work/mono") })
+<
+    -- regenerate only when you ask for it
+    require("gentags").setup({ generate = { on_open = false, on_write = false } })
+<
+
+                                                        *gentags.generate()*
+generate()
+                Same as |:GenCTags|. Returns the tag file path, or `nil` when
+                the buffer's filetype is not in `lang_ft_map`.
+
+                                                          *gentags.enable()*
+enable()
+                Same as |:GenTagsEnable|. Does nothing when already enabled.
+
+                                                         *gentags.disable()*
+disable()
+                Same as |:GenTagsDisable|.
+
+                                                       *gentags.root_dir()*
+root_dir({bufnr})
+                Returns the resolved root for `bufnr` (default: current
+                buffer). See |gentags-root|.
+
+==============================================================================
+5. OPTIONS                                              *gentags-options*
+
+>
+  {
+    autostart = true, -- register autocommands on setup
+    -- nil: auto detect per buffer, "path": fixed root, false: cwd,
+    -- function(bufnr): custom root
+    root_dir = nil,
+    generate = {
+      on_open = true,  -- generate on FileType when the tag file is missing
+      on_write = true, -- regenerate on BufWritePost, debounced by 300ms
+    },
+    cache = {
+      path = vim.fs.joinpath(vim.fn.stdpath("cache"), "tags"),
+    },
+    async = true, -- run ctags asynchronous
+    bin = "ctags",
+    args = { -- extra args
+      "--extras=+r+q",
+      "--exclude=.git",
+      "--exclude=node_modules*",
+      "--exclude=.mypy*",
+      "--exclude=.pytest*",
+      "--exclude=.ruff*",
+      "--exclude=BUILD",
+      "--exclude=vendor*",
+      "--exclude=*.min.*",
+    },
+    -- mapping ctags --languages <-> neovim filetypes
+    lang_ft_map = {
+      ["Python"] = { "python" },
+      ["Lua"] = { "lua" },
+      ["Vim"] = { "vim" },
+      ["C,C++,CUDA"] = { "c", "cpp", "h", "cuda" },
+      ["JavaScript"] = { "javascript" },
+      ["Go"] = { "go" },
+      ["Rust"] = { "rust" },
+    }
+  }
+<
+`lang_ft_map` is merged key by key, so adding a language does not drop the
+defaults: >
+    require("gentags").setup({
+      lang_ft_map = { ["Bash"] = { "sh", "bash" } },
+    })
+<
+`append_on_save` existed in earlier versions, did nothing, and was removed.
+
+==============================================================================
+6. ROOT DETECTION                                          *gentags-root*
+
+The project root is resolved per buffer, in this order:
+
+1. `vim.g.gentags_root_dir`
+2. the `root_dir` option: a string, `false` (use |cwd|), or a function
+   receiving the buffer number
+3. the nearest ancestor holding one of `.git`, `pyproject.toml`,
+   `package.json`, `go.mod`, `Cargo.toml`
+4. |cwd|
+
+The tag file name is the ctags language plus a base64 of the root, so the
+same project always maps to the same file in the cache.
+
+==============================================================================
+7. GENERATION MODEL                                *gentags-generation*
+
+- |FileType|: the tag file is added to the buffer's 'tags' option. It is
+  generated only when it does not exist yet, and only with
+  `generate.on_open`.
+- |BufWritePost|: a full `ctags -R <root>` run, debounced by 300ms, and only
+  with `generate.on_write`.
+- Runs are serialized per tag file. Requests arriving while ctags runs are
+  collapsed into exactly one follow-up run, so a save storm never spawns
+  parallel ctags processes.
+- Tags of deleted or renamed symbols disappear on the next full run, because
+  every run rewrites the whole tag file.
+
+==============================================================================
+8. HEALTH                                                *gentags-health*
+
+:checkhealth gentags
+
+Reports the Neovim version, the ctags binary and whether it is
+universal-ctags, the cache path and its writability, the mapped languages,
+the active options, the root resolved for the current buffer and the number
+of tag files in the cache.
+
+==============================================================================
+9. LIMITATIONS                                      *gentags-limitations*
+
+- ctags writes straight into the tag file, so a failed run can leave a
+  partial tag file behind.
+- The cache file name grows with the path length; a project deeper than
+  roughly 250 characters of root path can exceed the file name limit.
+- :GenTagsDisable does not remove tag files from the 'tags' option of buffers
+  that were already touched.
+
+vim:tw=78:ts=8:noet:ft=help:norl:
